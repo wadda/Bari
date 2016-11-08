@@ -5,7 +5,7 @@
 3. D1 conversion (pressure)
 4. D2 conversion (temperature)
 5. Read ADC result (24 bit pressure / temperature
-They are to be done in order. A loop can be shortened to steps 3-5
+They are executed in order. A loop can then be shortened to steps 3-5
 """
 from __future__ import division
 
@@ -35,7 +35,7 @@ REGISTER_C6 = 0XAC  # Temp Coefficient of Temperature
 #                   :  0.012  | 0.009| 0.006 | 0.004 | 0.003 | 0.002  # Celsius
 # Oversampling Ratio:    256  |  512 | 1024  | 2048  | 4096  | 8192
 # Sampling rate  ms :    0.54 | 1.06 | 2.08  | 4.13  | 8.22  | 16.44  # Manufacturer data sheet
-# delay sampling    :    2    |  4   |  6    |  10   |  18   |  34    # Recommended times from Arduino driver No idea.
+# delay sampling ms :    2    |  4   |  6    |  10   |  18   |  34    # Recommended times from Arduino driver. No idea.
 # Pressure Convert=Address, delay sec # Temperature Convert Address incremented at function.
 OSR256 = (0x40, 0.002)  # OSR-256   D1  # OSR256 = 0x50  # OSR-256   D2
 OSR512 = (0x42, 0.004)  # OSR-512   D1  # OSR512 = 0x52  # OSR-512   D2
@@ -77,7 +77,7 @@ class Chip(object):
         data = self._device.read_i2c_block_data(CHIP, REGISTER_C2, 2)  # Pressure Offset self.OFF
         self.OFF = data[0] * 256 + data[1]
 
-        data = self._device.read_i2c_block_data(CHIP, REGISTER_C3, 2)  # Temp Coefficient of Pressure Sensity self.TCF
+        data = self._device.read_i2c_block_data(CHIP, REGISTER_C3, 2)  # Temp Coefficient of Pressure Sens. self.TCF
         self.TCF = data[0] * 256 + data[1]
 
         data = self._device.read_i2c_block_data(CHIP, REGISTER_C4, 2)  # Temp Coefficient of Pressure Offset self.TCO
@@ -113,30 +113,35 @@ class Chip(object):
         """
         raw_pressure = self._read_raw_pressure()  # TODO: OSR settings
         raw_temperature = self._read_raw_temperature()
-        delta_time = raw_temperature - self.TREF * 256
-        offset = self.OFF * 131072 + (self.TCO * delta_time) / 64
-        sens = self.SENS * 65536 + (self.TCF * delta_time) / 128
+
+        delta_temp = raw_temperature - self.TREF * 256
+        offset = self.OFF * 131072 + (self.TCO * delta_temp) / 64
+        sens = self.SENS * 65536 + (self.TCF * delta_temp) / 128
+
         offset2 = 0
         sens2 = 0
-        T2 = 0  # Temp scaling
-        TEMP = 2000 + delta_time * self.TEMPSENS / 8388608
-        if TEMP > 2000:
-            T2 = 5 * delta_time * delta_time / 274877906944
+        t2 = 0  # Temp scaling
+
+        temp = 2000 + delta_temp * self.TEMPSENS / 8388608
+
+        if temp > 2000:
+            t2 = 5 * delta_temp * delta_temp / 274877906944
             offset2 = 0
             sens2 = 0
-        elif TEMP < 2000:
-            T2 = 3 * (delta_time * delta_time) / 8589934592
-            offset2 = 61 * ((TEMP - 2000) * (TEMP - 2000)) / 16
-            sens2 = 29 * ((TEMP - 2000) * (TEMP - 2000)) / 16
-            if TEMP < -1500:
-                offset2 += 17 * ((TEMP + 1500) * (TEMP + 1500))
-                sens2 += 9 * ((TEMP + 1500) * (TEMP + 1500))
+        elif temp < 2000:
+            t2 = 3 * (delta_temp * delta_temp) / 8589934592
+            offset2 = 61 * ((temp - 2000) * (temp - 2000)) / 16
+            sens2 = 29 * ((temp - 2000) * (temp - 2000)) / 16
+            if temp < -1500:
+                offset2 += 17 * ((temp + 1500) * (temp + 1500))
+                sens2 += 9 * ((temp + 1500) * (temp + 1500))
 
-        TEMP -= T2
         offset -= offset2
         sens -= sens2
+        temp -= t2
+
         pressure = ((((raw_pressure * sens) / 2097152) - offset) / 32768.0)
-        temperature = TEMP / 100.0
+        temperature = temp / 100.0
         return pressure, temperature
 
 
