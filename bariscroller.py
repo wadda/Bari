@@ -14,17 +14,16 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import threading
 
-import bari
-
+import bari  # MS5637 pressure/temperature chip on i2c.
 sensor = bari.Chip()
 
 __author__ = 'Moe'
 __copyright__ = 'Copyright 2016  Moe'
 __license__ = 'MIT'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 # pinched and modified from http://stackoverflow.com/questions/11874767/real-time-plotting-in-while-loop-with-matplotlib
 
-XLIMIT = 3000
+XLIMIT = 5400
 YUPPER = 106000
 YLOWER = 98000
 SLEEP_FOR = .052  # Guesstimate for approx. 10 readings per second.
@@ -45,7 +44,7 @@ class CustomMainWindow(QtGui.QMainWindow):
         super(CustomMainWindow, self).__init__()
 
         # Define the geometry of the main window
-        self.setGeometry(300, 300, 1000, 400)
+        self.setGeometry(100, 50, 1000, 500)
         self.setWindowTitle("Drummoyne Wharf")
 
         # Create FRAME_A
@@ -77,13 +76,13 @@ class CustomMainWindow(QtGui.QMainWindow):
         self.XfewerBtn = QtGui.QPushButton(text='Less')
         setCustomSize(self.XfewerBtn, 60, 30)
         self.XfewerBtn.clicked.connect(self.x_fewer)
-        # self.buttonbox.addWidget(self.XfewerBtn, *(1, 0))
+        self.LAYOUT_A.addWidget(self.XfewerBtn, *(2, 0))
 
         # x more button
         self.XmoreBtn = QtGui.QPushButton(text='More')
         setCustomSize(self.XmoreBtn, 60, 30)
         self.XmoreBtn.clicked.connect(self.x_more)
-        # self.buttonbox.addWidget(self.XmoreBtn, *(1, 1))
+        self.LAYOUT_A.addWidget(self.XmoreBtn, *(2, 1))
 
         # Place the matplotlib figure
         self.myFig = CustomFigCanvas()
@@ -130,15 +129,15 @@ class CustomFigCanvas(FigureCanvas, TimedAnimation):
         self.y = (self.n * 0.0) + YLOWER
 
         # The window
-        self.fig = Figure(figsize=(12, 2), dpi=80)
+        self.fig = Figure(figsize=(12, 3), dpi=80)
         self.ax1 = self.fig.add_subplot(111)
 
         # self.ax1 settings
         self.ax1.set_xlabel('Readings incremented time')
         self.ax1.set_ylabel('River Level - Raw data')
         self.line1 = Line2D([], [], color='blue', aa=True)
-        self.line1_tail = Line2D([], [], color='red', linewidth=2)
-        self.line1_head = Line2D([], [], color='red', marker='o', markeredgecolor='r')
+        self.line1_tail = Line2D([], [], color='red', linewidth=1)
+        self.line1_head = Line2D([], [], color='red', marker='*', markeredgecolor='r')
         # self.line2 = Line2D([], [], linewidth=5, color='red', )
 
         self.ax1.add_line(self.line1)
@@ -181,7 +180,6 @@ class CustomFigCanvas(FigureCanvas, TimedAnimation):
     def lessIn(self, value):
         left = self.ax1.get_xlim()[0]
         right = self.ax1.get_xlim()[1]
-        # left += value
         right -= value
         self.ax1.set_xlim(left, right)
         self.draw()
@@ -189,7 +187,6 @@ class CustomFigCanvas(FigureCanvas, TimedAnimation):
     def moreOut(self, value):
         left = self.ax1.get_xlim()[0]
         right = self.ax1.get_xlim()[1]
-        # left -= value
         right += value
         self.ax1.set_xlim(left, right)
         self.draw()
@@ -244,7 +241,6 @@ def dataSendLoop(addData_callbackFunc):
             i = 0
         # pressure, _temperature = sensor.bari()
         pressure, _temperature = sensor.bari()
-        ##############
         time.sleep(SLEEP_FOR)  # (.052)  # Guestimated 1/10 second readinging with 5367 Chip lag
 
         mySrc.data_signal.emit(pressure)  # <- Here you emit a signal!
