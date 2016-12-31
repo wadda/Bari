@@ -6,6 +6,7 @@
 4. D2 conversion (temperature)
 5. Read ADC result (24 bit pressure / temperature
 They are executed in order. A loop can then be shortened to steps 3-5
+Code initiated by Yadwinder Singh
 """
 from __future__ import division
 
@@ -16,12 +17,12 @@ import smbus
 __author__ = 'Moe'
 __copyright__ = 'Copyright 2016  Moe'
 __license__ = 'MIT'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 # MS5637 default address.
 CHIP = 0x76
-# Registers
-# PROM Read 0XA0 to 0XAC
+
+# Registers PROM Read 0XA0 to 0XAC
 REGISTER_C0 = 0XA0  # CRC, and 'Factory defined'. e.g., [189, 225].
 REGISTER_C1 = 0XA2  # Sensitivity
 REGISTER_C2 = 0XA4  # Pressure Offset
@@ -35,7 +36,8 @@ REGISTER_C6 = 0XAC  # Temp Coefficient of Temperature
 #                   :  0.012  | 0.009| 0.006 | 0.004 | 0.003 | 0.002  # Celsius
 # Oversampling Ratio:    256  |  512 | 1024  | 2048  | 4096  | 8192
 # Sampling rate  ms :    0.54 | 1.06 | 2.08  | 4.13  | 8.22  | 16.44  # Manufacturer data sheet
-# delay sampling ms :    2    |  4   |  6    |  10   |  18   |  34    # Recommended times from Arduino driver. No idea.
+# delay sampling ms :    2    |  4   |  6    |  10   |  18   |  34    # Recommended from Arduino driver. I've no idea.
+
 # Pressure Convert=Address, delay sec # Temperature Convert Address incremented at function.
 OSR256 = (0x40, 0.002)  # OSR-256   D1  # OSR256 = 0x50  # OSR-256   D2
 OSR512 = (0x42, 0.004)  # OSR-512   D1  # OSR512 = 0x52  # OSR-512   D2
@@ -49,7 +51,7 @@ ADC_READ = 0x00
 RESET = 0x1E
 
 
-class Chip(object):
+class MS5637(object):
     """. . ."""
 
     def __init__(self, i2c_bus=1):
@@ -108,7 +110,7 @@ class Chip(object):
         raw_temperature = raw_value[0] * 65536 + raw_value[1] * 256 + raw_value[2]
         return raw_temperature  # D2
 
-    def bari(self):
+    def get_data(self):
         """Convert raw date into calibrated pressure (pascals) and temperature (degrees)
         """
         raw_pressure = self._read_raw_pressure()  # TODO: OSR settings
@@ -146,9 +148,9 @@ class Chip(object):
 
 
 if __name__ == '__main__':
-    chip = Chip()
-    for i in range(1, 10):
-        pressure, temperature = chip.bari()
+    chip = MS5637()
+    while True:
+        pressure, temperature = chip.get_data()
         print('Pascals: {}   TempC: {}'.format(pressure, temperature))
         sleep(1)
 #
