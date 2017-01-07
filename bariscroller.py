@@ -14,14 +14,16 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import time
 import threading
 
-import bari  # MS5637 pressure/temperature chip on i2c.
-sensor = bari.Chip()
+import ms5637
 
 __author__ = 'Moe'
-__copyright__ = 'Copyright 2016  Moe'
+__copyright__ = 'Copyright 2017  Moe'
 __license__ = 'MIT'
-__version__ = '0.0.3'
+__version__ = '0.0.2'
 # pinched and modified from http://stackoverflow.com/questions/11874767/real-time-plotting-in-while-loop-with-matplotlib
+
+# Bari sensor of MS5637
+sensor = ms5637.Chip()
 
 XLIMIT = 5400
 YUPPER = 106000
