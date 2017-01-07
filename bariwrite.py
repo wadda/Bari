@@ -2,18 +2,18 @@
 # coding=utf-8
 """reads barometric pressure sensor and writes it to a log
 """
-import bari
 from datetime import datetime
 from time import time
 from time import sleep
+import ms5637
 
 __author__ = 'Moe'
-__copyright__ = 'Copyright 2016 Moe'
+__copyright__ = 'Copyright 2017  Moe'
 __license__ = 'MIT'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
-sensor = bari.Chip()
-
+# Bari sensor of MS5637
+sensor = ms5637.Chip()
 bari_file = 'bari_data.csv'
 
 try:
