@@ -242,7 +242,7 @@ def dataSendLoop(addData_callbackFunc):
         if (i > 499):
             i = 0
         # pressure, _temperature = sensor.bari()
-        pressure, _temperature = sensor.bari()
+        pressure, _temperature = sensor.get_data()
         time.sleep(SLEEP_FOR)  # (.052)  # Guestimated 1/10 second readinging with 5367 Chip lag
 
         mySrc.data_signal.emit(pressure)  # <- Here you emit a signal!
