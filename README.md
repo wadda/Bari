@@ -7,4 +7,4 @@ An environmental wave sensor built with off the shelf componants.
 
 See it in action:
 
-http:ferries.ddns.net
+http://ferries.ddns.net
