@@ -22,7 +22,7 @@ try:
 
         now = time()
         humantime = datetime.fromtimestamp(now).strftime('%Y-%m-%dT%H:%M:%SZ')
-        pressure, _temperature = sensor.bari()
+        pressure, _temperature = sensor.get_data()
         outstring = str(humantime) + ', ' + str(pressure) + '\n'
         print(str(now) + ' ' + str(pressure))
         bari_data.writelines(outstring)
